@@ -28,18 +28,29 @@ export type FeelConfig =
   | 'playful'
   | { curve: FeelCurve }
 
-export type UseTypewriterOptions = {
-  text: string | Array<string>
+type BaseTypewriterOptions = {
   feel?: FeelConfig
   blur?: BlurOptions | false
-  loop?: boolean
   initialDelay?: number
-  pauseAfter?: number
   onStart?: () => void
   onDone?: () => void
   onCharTyped?: (params: { char: string; index: number }) => void
   onDelete?: (params: { char: string; index: number }) => void
 }
+
+type LoopOptions = BaseTypewriterOptions & {
+  text: Array<string>
+  loop: true
+  pauseAfter?: number
+}
+
+type NoLoopOptions = BaseTypewriterOptions & {
+  text: string
+  loop?: false
+  pauseAfter?: never
+}
+
+export type UseTypewriterOptions = LoopOptions | NoLoopOptions
 
 export type UseTypewriterResult = {
   segments: Array<Segment>

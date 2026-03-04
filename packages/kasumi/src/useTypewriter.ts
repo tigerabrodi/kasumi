@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { animateBlurIn, animateBlurOut, resolveBlur } from './blur'
+import { getCharDelay, resolveFeel } from './timing'
 import type {
   Segment,
   UseTypewriterOptions,
   UseTypewriterResult,
 } from './types'
-import { getCharDelay, resolveFeel } from './timing'
-import { animateBlurIn, animateBlurOut, resolveBlur } from './blur'
 
 type Phase = 'idle' | 'typing' | 'pausing' | 'deleting' | 'done'
 
@@ -13,19 +13,18 @@ export function useTypewriter(
   options: UseTypewriterOptions
 ): UseTypewriterResult {
   const {
-    text: rawText,
     feel,
     blur,
-    loop: shouldLoop = false,
     initialDelay = 0,
-    pauseAfter = 1200,
     onStart,
     onDone,
     onCharTyped,
     onDelete,
   } = options
 
-  const strings = Array.isArray(rawText) ? rawText : [rawText]
+  const shouldLoop = options.loop === true
+  const pauseAfter = shouldLoop ? (options.pauseAfter ?? 1200) : 1200
+  const strings = Array.isArray(options.text) ? options.text : [options.text]
   const resolved = resolveFeel(feel)
   const blurConfig = resolveBlur(blur)
 

@@ -55,7 +55,7 @@ function CodeBlock({
   config,
 }: {
   config: {
-    text: string
+    texts: Array<string>
     feel: string
     blur: BlurOptions | false
     loop: boolean
@@ -63,11 +63,19 @@ function CodeBlock({
     pauseAfter: number
   }
 }) {
-  const lines: Array<string> = [
-    `const { segments, isDone } = useTypewriter({`,
-    `  text: "${config.text}",`,
-    `  feel: "${config.feel}",`,
-  ]
+  const lines: Array<string> = [`const { segments, isDone } = useTypewriter({`]
+
+  if (config.loop && config.texts.length > 1) {
+    lines.push(`  text: [`)
+    for (const t of config.texts) {
+      lines.push(`    "${t}",`)
+    }
+    lines.push(`  ],`)
+  } else {
+    lines.push(`  text: "${config.texts[0]}",`)
+  }
+
+  lines.push(`  feel: "${config.feel}",`)
 
   if (config.blur !== false) {
     lines.push(`  blur: {`)
@@ -118,28 +126,24 @@ function CodeBlock({
 }
 
 function Preview({
-  text,
+  texts,
   feel,
   blur,
   loop: shouldLoop,
   initialDelay,
   pauseAfter,
 }: {
-  text: string
+  texts: Array<string>
   feel: FeelConfig
   blur: BlurOptions | false
   loop: boolean
   initialDelay: number
   pauseAfter: number
 }) {
-  const { segments, isDone, isTyping, isDeleting } = useTypewriter({
-    text,
-    feel,
-    blur,
-    loop: shouldLoop,
-    initialDelay,
-    pauseAfter,
-  })
+  const options = shouldLoop
+    ? { text: texts, feel, blur, loop: true as const, initialDelay, pauseAfter }
+    : { text: texts[0], feel, blur, initialDelay }
+  const { segments, isDone, isTyping, isDeleting } = useTypewriter(options)
 
   return (
     <div className="flex flex-col gap-3">
@@ -167,7 +171,7 @@ function Preview({
 }
 
 export function Playground() {
-  const [text, setText] = useState('Characters materialize through haze')
+  const [texts, setTexts] = useState(['Characters materialize through haze'])
   const [feel, setFeel] = useState<'cinematic' | 'snappy' | 'playful'>(
     'cinematic'
   )
@@ -205,7 +209,7 @@ export function Playground() {
         <div className="bg-cream rounded-xl p-10">
           <Preview
             key={runKey}
-            text={text}
+            texts={texts}
             feel={feel}
             blur={blurConfig}
             loop={isLoopEnabled}
@@ -214,17 +218,76 @@ export function Playground() {
           />
         </div>
 
-        {/* Text input */}
+        {/* Text inputs */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-semibold text-stone uppercase tracking-widest">
-            Text
+            {isLoopEnabled && texts.length > 1 ? 'Texts' : 'Text'}
           </label>
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg outline-none text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
-          />
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={texts[0]}
+                onChange={(e) => {
+                  const next = [...texts]
+                  next[0] = e.target.value
+                  setTexts(next)
+                }}
+                placeholder="String 1"
+                className="flex-1 px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg outline-none text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
+              />
+            </div>
+            <AnimatePresence initial={false}>
+              {texts.slice(1).map((t, i) => (
+                <motion.div
+                  key={i + 1}
+                  initial={{ height: 0, opacity: 0, filter: 'blur(8px)' }}
+                  animate={{ height: 'auto', opacity: 1, filter: 'blur(0px)' }}
+                  exit={{ height: 0, opacity: 0, filter: 'blur(8px)' }}
+                  transition={COLLAPSE_TRANSITION}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={t}
+                      onChange={(e) => {
+                        const next = [...texts]
+                        next[i + 1] = e.target.value
+                        setTexts(next)
+                      }}
+                      placeholder={`String ${i + 2}`}
+                      className="flex-1 px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg outline-none text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
+                    />
+                    {texts.length > 2 && (
+                      <button
+                        onClick={() =>
+                          setTexts(texts.filter((_, j) => j !== i + 1))
+                        }
+                        className="px-3 py-2.5 text-sm text-stone hover:text-warm-brown transition-colors cursor-pointer"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+          <AnimatePresence initial={false}>
+            {isLoopEnabled && (
+              <motion.button
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={COLLAPSE_TRANSITION}
+                onClick={() => setTexts([...texts, ''])}
+                className="self-start text-sm text-warm-brown hover:text-warm-black transition-colors cursor-pointer mt-1"
+              >
+                + Add text
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Toggle controls */}
@@ -288,7 +351,14 @@ export function Playground() {
               type="single"
               value={isLoopEnabled ? 'on' : 'off'}
               onValueChange={(v) => {
-                if (v) setIsLoopEnabled(v === 'on')
+                if (!v) return
+                const isOn = v === 'on'
+                setIsLoopEnabled(isOn)
+                if (isOn && texts.length < 2) {
+                  setTexts([...texts, ''])
+                } else if (!isOn) {
+                  setTexts([texts[0]])
+                }
               }}
               className="flex gap-1.5"
             >
@@ -382,7 +452,7 @@ export function Playground() {
         <div className="bg-code-bg rounded-[14px] p-8">
           <CodeBlock
             config={{
-              text,
+              texts,
               feel,
               blur: blurConfig,
               loop: isLoopEnabled,

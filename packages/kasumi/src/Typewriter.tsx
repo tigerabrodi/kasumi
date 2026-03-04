@@ -3,33 +3,15 @@ import type { TypewriterProps } from './types'
 import { useTypewriter } from './useTypewriter'
 
 export function Typewriter({
-  text,
-  feel,
-  blur,
-  loop,
-  initialDelay,
-  pauseAfter,
-  onStart,
-  onDone,
-  onCharTyped,
-  onDelete,
   as = 'span',
   className,
+  ...options
 }: TypewriterProps) {
-  const result = useTypewriter({
-    text,
-    feel,
-    blur,
-    loop,
-    initialDelay,
-    pauseAfter,
-    onStart,
-    onDone,
-    onCharTyped,
-    onDelete,
-  })
+  const result = useTypewriter(options)
 
-  const fullText = Array.isArray(text) ? text.join(' ') : text
+  const fullText = Array.isArray(options.text)
+    ? options.text.join(' ')
+    : options.text
 
   return createElement(
     as,

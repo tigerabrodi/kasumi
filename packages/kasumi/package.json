@@ -1,6 +1,6 @@
 {
   "name": "@tigerabrodioss/kasumi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React typewriter effect with blur trail and deceleration",
   "type": "module",
   "main": "./dist/index.cjs",
