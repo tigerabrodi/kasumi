@@ -3,54 +3,51 @@ import type { TypewriterProps } from './types'
 import { useTypewriter } from './useTypewriter'
 
 export function Typewriter({
-  strings,
+  text,
   feel,
   blur,
   loop,
-  pauseBetween,
-  deleteSpeed,
-  autoStart,
+  initialDelay,
+  pauseAfter,
+  onStart,
+  onDone,
+  onCharTyped,
+  onDelete,
   as = 'span',
   className,
-  style,
-  charClassName,
-  children,
 }: TypewriterProps) {
   const result = useTypewriter({
-    strings,
+    text,
     feel,
     blur,
     loop,
-    pauseBetween,
-    deleteSpeed,
-    autoStart,
+    initialDelay,
+    pauseAfter,
+    onStart,
+    onDone,
+    onCharTyped,
+    onDelete,
   })
 
-  if (children) {
-    return <>{children(result)}</>
-  }
+  const fullText = Array.isArray(text) ? text.join(' ') : text
 
   return createElement(
     as,
     {
       className,
-      style: { display: 'inline', ...style },
-      'aria-label':
-        typeof strings === 'string'
-          ? strings
-          : strings[result.currentStringIndex],
+      style: { display: 'inline' },
+      'aria-label': fullText,
     },
-    result.segments.map((segment, i) => (
+    result.segments.map((seg) => (
       <span
-        key={`${result.currentStringIndex}-${i}`}
-        ref={result.refCallback(i)}
-        className={charClassName}
+        key={`${seg.index}`}
+        ref={seg.ref}
         style={{
-          visibility: segment.status === 'hidden' ? 'hidden' : 'visible',
+          visibility: seg.state === 'hidden' ? 'hidden' : 'visible',
         }}
         aria-hidden="true"
       >
-        {segment.char}
+        {seg.char}
       </span>
     ))
   )

@@ -1,51 +1,60 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   Segment,
-  TypewriterPhase,
   UseTypewriterOptions,
   UseTypewriterResult,
 } from './types'
-import { getCharDelay, resolveFeelConfig } from './timing'
-import { animateBlurIn, animateBlurOut, resolveBlurOptions } from './blur'
+import { getCharDelay, resolveFeel } from './timing'
+import { animateBlurIn, animateBlurOut, resolveBlur } from './blur'
 
-function buildSegments(text: string, visibleCount: number): Array<Segment> {
-  return text.split('').map((char, i) => ({
-    char,
-    status: i < visibleCount ? 'visible' : 'hidden',
-  }))
-}
+type Phase = 'idle' | 'typing' | 'pausing' | 'deleting' | 'done'
 
 export function useTypewriter(
   options: UseTypewriterOptions
 ): UseTypewriterResult {
   const {
-    strings: rawStrings,
+    text: rawText,
     feel,
     blur,
     loop: shouldLoop = false,
-    pauseBetween = 2000,
-    deleteSpeed = 0.5,
-    autoStart: shouldAutoStart = true,
+    initialDelay = 0,
+    pauseAfter = 1200,
+    onStart,
+    onDone,
+    onCharTyped,
+    onDelete,
   } = options
 
-  const strings = Array.isArray(rawStrings) ? rawStrings : [rawStrings]
-  const feelConfig = resolveFeelConfig(feel)
-  const blurOptions = resolveBlurOptions(blur)
+  const strings = Array.isArray(rawText) ? rawText : [rawText]
+  const resolved = resolveFeel(feel)
+  const blurConfig = resolveBlur(blur)
 
   const [visibleCount, setVisibleCount] = useState(0)
   const [stringIndex, setStringIndex] = useState(0)
-  const [phase, setPhase] = useState<TypewriterPhase>(
-    shouldAutoStart ? 'typing' : 'done'
+  const [phase, setPhase] = useState<Phase>(
+    initialDelay > 0 ? 'idle' : 'typing'
   )
+  const [isPaused, setIsPaused] = useState(false)
 
   const currentText = strings[stringIndex] ?? ''
+  const isMultiString = strings.length > 1
 
   const elRefs = useRef<Map<number, HTMLElement>>(new Map())
   const animationsRef = useRef<Map<number, Animation>>(new Map())
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const isMultiString = strings.length > 1
+  const hasStartedRef = useRef(false)
 
-  // Cleanup animations on unmount
+  // Stable callback refs
+  const onStartRef = useRef(onStart)
+  const onDoneRef = useRef(onDone)
+  const onCharTypedRef = useRef(onCharTyped)
+  const onDeleteRef = useRef(onDelete)
+  onStartRef.current = onStart
+  onDoneRef.current = onDone
+  onCharTypedRef.current = onCharTyped
+  onDeleteRef.current = onDelete
+
+  // Cleanup on unmount
   useEffect(() => {
     const animations = animationsRef.current
     return () => {
@@ -55,32 +64,51 @@ export function useTypewriter(
     }
   }, [])
 
+  // Initial delay
+  useEffect(() => {
+    if (phase !== 'idle') return
+    timerRef.current = setTimeout(() => {
+      setPhase('typing')
+    }, initialDelay)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [phase, initialDelay])
+
   // Typing phase
   useEffect(() => {
-    if (phase !== 'typing') return
+    if (phase !== 'typing' || isPaused) return
+
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true
+      onStartRef.current?.()
+    }
 
     if (visibleCount >= currentText.length) {
-      if (isMultiString && shouldLoop) {
-        setPhase('pausing')
-      } else if (isMultiString && stringIndex < strings.length - 1) {
+      if (isMultiString && (shouldLoop || stringIndex < strings.length - 1)) {
         setPhase('pausing')
       } else {
         setPhase('done')
+        onDoneRef.current?.()
       }
       return
     }
 
-    const delay = getCharDelay(visibleCount, currentText.length, feelConfig)
+    const delay = getCharDelay(visibleCount, currentText.length, resolved)
     timerRef.current = setTimeout(() => {
+      const charIndex = visibleCount
       setVisibleCount((c) => c + 1)
 
-      const el = elRefs.current.get(visibleCount)
-      if (el && blurOptions) {
-        const anim = animateBlurIn(el, blurOptions)
-        if (anim) {
-          animationsRef.current.set(visibleCount, anim)
-        }
+      const el = elRefs.current.get(charIndex)
+      if (el && blurConfig) {
+        const anim = animateBlurIn(el, blurConfig)
+        animationsRef.current.set(charIndex, anim)
       }
+
+      onCharTypedRef.current?.({
+        char: currentText[charIndex],
+        index: charIndex,
+      })
     }, delay)
 
     return () => {
@@ -88,10 +116,11 @@ export function useTypewriter(
     }
   }, [
     phase,
+    isPaused,
     visibleCount,
     currentText,
-    feelConfig,
-    blurOptions,
+    resolved,
+    blurConfig,
     isMultiString,
     shouldLoop,
     stringIndex,
@@ -100,43 +129,47 @@ export function useTypewriter(
 
   // Pause phase
   useEffect(() => {
-    if (phase !== 'pausing') return
+    if (phase !== 'pausing' || isPaused) return
 
     timerRef.current = setTimeout(() => {
       setPhase('deleting')
-    }, pauseBetween)
+    }, pauseAfter)
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [phase, pauseBetween])
+  }, [phase, isPaused, pauseAfter])
 
   // Deleting phase
   useEffect(() => {
-    if (phase !== 'deleting') return
+    if (phase !== 'deleting' || isPaused) return
 
     if (visibleCount <= 0) {
       const nextIndex = stringIndex + 1 >= strings.length ? 0 : stringIndex + 1
       setStringIndex(nextIndex)
+      hasStartedRef.current = false
       setPhase('typing')
       return
     }
 
-    const baseDeleteDelay = feelConfig.baseDelay * deleteSpeed
+    const deleteDelay = resolved.baseDelay * 0.5
     const jitter = 0.85 + Math.random() * 0.3
-    const delay = Math.round(baseDeleteDelay * jitter)
+    const delay = Math.round(deleteDelay * jitter)
 
     timerRef.current = setTimeout(() => {
       const deletingIndex = visibleCount - 1
 
       const el = elRefs.current.get(deletingIndex)
-      if (el && blurOptions) {
+      if (el && blurConfig) {
         animationsRef.current.get(deletingIndex)?.cancel()
-        const anim = animateBlurOut(el, blurOptions)
-        if (anim) {
-          animationsRef.current.set(deletingIndex, anim)
-        }
+        const anim = animateBlurOut(el, blurConfig)
+        animationsRef.current.set(deletingIndex, anim)
       }
+
+      onDeleteRef.current?.({
+        char: currentText[deletingIndex],
+        index: deletingIndex,
+      })
 
       setVisibleCount((c) => c - 1)
     }, delay)
@@ -146,15 +179,17 @@ export function useTypewriter(
     }
   }, [
     phase,
+    isPaused,
     visibleCount,
-    feelConfig,
-    deleteSpeed,
-    blurOptions,
+    resolved,
+    blurConfig,
     stringIndex,
     strings.length,
+    currentText,
   ])
 
-  const refCallback = useCallback(
+  // Build segments with embedded refs
+  const makeRef = useCallback(
     (index: number) => (el: HTMLElement | null) => {
       if (el) {
         elRefs.current.set(index, el)
@@ -167,6 +202,23 @@ export function useTypewriter(
     []
   )
 
+  const segments: Array<Segment> = currentText.split('').map((char, i) => ({
+    char,
+    state: i < visibleCount ? 'stable' : 'hidden',
+    ref: makeRef(i),
+    index: i,
+  }))
+
+  // Mark actively blurring segments
+  if (blurConfig) {
+    const trailStart = Math.max(0, visibleCount - blurConfig.trailLength)
+    for (let i = trailStart; i < visibleCount; i++) {
+      if (segments[i]) {
+        segments[i] = { ...segments[i], state: 'blurring' }
+      }
+    }
+  }
+
   const restart = useCallback(() => {
     animationsRef.current.forEach((anim) => anim.cancel())
     animationsRef.current.clear()
@@ -174,16 +226,27 @@ export function useTypewriter(
 
     setStringIndex(0)
     setVisibleCount(0)
-    setPhase('typing')
+    setIsPaused(false)
+    hasStartedRef.current = false
+    setPhase(initialDelay > 0 ? 'idle' : 'typing')
+  }, [initialDelay])
+
+  const pause = useCallback(() => {
+    setIsPaused(true)
+    if (timerRef.current) clearTimeout(timerRef.current)
   }, [])
 
-  const segments = buildSegments(currentText, visibleCount)
+  const resume = useCallback(() => {
+    setIsPaused(false)
+  }, [])
 
   return {
     segments,
-    refCallback,
-    phase,
-    currentStringIndex: stringIndex,
+    isDone: phase === 'done',
+    isTyping: phase === 'typing' && !isPaused,
+    isDeleting: phase === 'deleting' && !isPaused,
     restart,
+    pause,
+    resume,
   }
 }

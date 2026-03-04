@@ -1,40 +1,42 @@
-import type { FeelConfig, FeelPreset } from './types'
+import type { FeelConfig, FeelCurve } from './types'
 
-const PRESETS: Record<FeelPreset, FeelConfig> = {
+type ResolvedFeel = {
+  baseDelay: number
+  curve: FeelCurve
+}
+
+const PRESETS: Record<string, ResolvedFeel> = {
   cinematic: {
     baseDelay: 80,
-    curve: (p) => 1 + p * 1.8,
+    curve: ({ progress }) => 80 + progress * 140,
   },
   snappy: {
     baseDelay: 40,
-    curve: (p) => 1 + p * 0.6,
+    curve: ({ progress }) => 40 + progress * 24,
   },
   playful: {
     baseDelay: 60,
-    curve: (p) => 1 + Math.sin(p * Math.PI) * 0.8,
+    curve: ({ progress }) => 60 + Math.sin(progress * Math.PI) * 48,
   },
 }
 
-export function resolveFeelConfig(
-  feel: FeelPreset | FeelConfig | undefined
-): FeelConfig {
+export function resolveFeel(feel: FeelConfig | undefined): ResolvedFeel {
   if (!feel) return PRESETS.cinematic
   if (typeof feel === 'string') return PRESETS[feel]
-  return feel
+  return { baseDelay: 80, curve: feel.curve }
 }
 
 /**
- * Returns the delay for a character at a given index within a string of total length.
- * Applies the deceleration curve so later characters are typed slower.
- * Adds slight natural jitter (±15%) for organic feel.
+ * Returns the delay in ms for a character at a given index.
+ * Applies the feel curve and adds slight natural jitter (±15%).
  */
 export function getCharDelay(
   index: number,
-  totalLength: number,
-  config: FeelConfig
+  total: number,
+  resolved: ResolvedFeel
 ): number {
-  const progress = totalLength <= 1 ? 0 : index / (totalLength - 1)
-  const multiplier = config.curve(progress)
-  const jitter = 0.85 + Math.random() * 0.3 // 0.85–1.15
-  return Math.round(config.baseDelay * multiplier * jitter)
+  const progress = total <= 1 ? 0 : index / (total - 1)
+  const base = resolved.curve({ progress, index, total })
+  const jitter = 0.85 + Math.random() * 0.3
+  return Math.round(base * jitter)
 }

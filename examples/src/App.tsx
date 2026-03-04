@@ -1,15 +1,15 @@
 import { Typewriter, useTypewriter } from '@tigerabrodioss/kasumi'
 
 function HookDemo() {
-  const { segments, refCallback, phase, restart } = useTypewriter({
-    strings: [
+  const { segments, isDone, restart } = useTypewriter({
+    text: [
       'Build something beautiful.',
       'Ship with confidence.',
       'Dream in code.',
     ],
     feel: 'cinematic',
     loop: true,
-    pauseBetween: 2500,
+    pauseAfter: 2500,
   })
 
   return (
@@ -26,12 +26,12 @@ function HookDemo() {
         Hook — Loop Mode (Cinematic)
       </h2>
       <p style={{ fontSize: 36, fontWeight: 300, minHeight: 50 }}>
-        {segments.map((seg, i) => (
+        {segments.map((seg) => (
           <span
-            key={i}
-            ref={refCallback(i)}
+            key={seg.index}
+            ref={seg.ref}
             style={{
-              visibility: seg.status === 'hidden' ? 'hidden' : 'visible',
+              visibility: seg.state === 'hidden' ? 'hidden' : 'visible',
             }}
           >
             {seg.char}
@@ -39,7 +39,7 @@ function HookDemo() {
         ))}
         <span
           style={{
-            opacity: phase === 'done' ? 0 : 1,
+            opacity: isDone ? 0 : 1,
             transition: 'opacity 0.3s',
           }}
         >
@@ -81,7 +81,7 @@ function ComponentSnappy() {
       </h2>
       <div style={{ fontSize: 28, fontWeight: 400 }}>
         <Typewriter
-          strings="The quick brown fox jumps over the lazy dog."
+          text="The quick brown fox jumps over the lazy dog."
           feel="snappy"
         />
       </div>
@@ -105,7 +105,7 @@ function ComponentPlayful() {
       </h2>
       <div style={{ fontSize: 28, fontWeight: 400 }}>
         <Typewriter
-          strings="No blur, just pure typing energy!"
+          text="No blur, just pure typing energy!"
           feel="playful"
           blur={false}
         />
@@ -130,10 +130,10 @@ function ComponentLoop() {
       </h2>
       <div style={{ fontSize: 28, fontWeight: 400 }}>
         <Typewriter
-          strings={['designers', 'engineers', 'dreamers', 'makers']}
+          text={['designers', 'engineers', 'dreamers', 'makers']}
           feel="cinematic"
           loop
-          pauseBetween={1800}
+          pauseAfter={1800}
         />
       </div>
     </div>

@@ -1,43 +1,50 @@
 import type { BlurOptions } from './types'
 
-const DEFAULT_BLUR: Required<BlurOptions> = {
-  enabled: true,
-  maxBlur: 8,
-  duration: 600,
+export type ResolvedBlur = {
+  trailLength: number
+  duration: number
+  amount: number
+  easing: string
 }
 
-export function resolveBlurOptions(
+const DEFAULTS: ResolvedBlur = {
+  trailLength: 4,
+  duration: 300,
+  amount: 8,
+  easing: 'ease-out',
+}
+
+export function resolveBlur(
   blur: BlurOptions | false | undefined
-): Required<BlurOptions> | null {
+): ResolvedBlur | null {
   if (blur === false) return null
-  if (!blur) return DEFAULT_BLUR
+  if (!blur) return DEFAULTS
   return {
-    enabled: blur.enabled ?? DEFAULT_BLUR.enabled,
-    maxBlur: blur.maxBlur ?? DEFAULT_BLUR.maxBlur,
-    duration: blur.duration ?? DEFAULT_BLUR.duration,
+    trailLength: blur.trailLength ?? DEFAULTS.trailLength,
+    duration: blur.duration ?? DEFAULTS.duration,
+    amount: blur.amount ?? DEFAULTS.amount,
+    easing: blur.easing ?? DEFAULTS.easing,
   }
 }
 
 /**
  * Animate an element from blurred to clear using WAAPI.
- * Returns the Animation object so it can be cancelled if needed.
  */
 export function animateBlurIn(
   el: HTMLElement,
-  options: Required<BlurOptions>
-): Animation | null {
-  if (!options.enabled) return null
-
-  const keyframes: Array<Keyframe> = [
-    { filter: `blur(${options.maxBlur}px)`, opacity: 0.4 },
-    { filter: 'blur(0px)', opacity: 1 },
-  ]
-
-  return el.animate(keyframes, {
-    duration: options.duration,
-    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-    fill: 'forwards',
-  })
+  options: ResolvedBlur
+): Animation {
+  return el.animate(
+    [
+      { filter: `blur(${options.amount}px)`, opacity: 0.4 },
+      { filter: 'blur(0px)', opacity: 1 },
+    ],
+    {
+      duration: options.duration,
+      easing: options.easing,
+      fill: 'forwards',
+    }
+  )
 }
 
 /**
@@ -45,18 +52,17 @@ export function animateBlurIn(
  */
 export function animateBlurOut(
   el: HTMLElement,
-  options: Required<BlurOptions>
-): Animation | null {
-  if (!options.enabled) return null
-
-  const keyframes: Array<Keyframe> = [
-    { filter: 'blur(0px)', opacity: 1 },
-    { filter: `blur(${options.maxBlur * 0.5}px)`, opacity: 0 },
-  ]
-
-  return el.animate(keyframes, {
-    duration: options.duration * 0.4,
-    easing: 'cubic-bezier(0.55, 0.06, 0.68, 0.19)',
-    fill: 'forwards',
-  })
+  options: ResolvedBlur
+): Animation {
+  return el.animate(
+    [
+      { filter: 'blur(0px)', opacity: 1 },
+      { filter: `blur(${options.amount * 0.5}px)`, opacity: 0 },
+    ],
+    {
+      duration: options.duration * 0.6,
+      easing: options.easing,
+      fill: 'forwards',
+    }
+  )
 }
