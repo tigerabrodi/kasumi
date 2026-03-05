@@ -1,18 +1,19 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-cream: #faf7f2;
-  --color-cream-dark: #f3ede4;
-  --color-warm-black: #2c2418;
-  --color-warm-brown: #8b7355;
-  --color-stone: #b8a990;
-  --color-stone-light: #d4c9b8;
-  --color-stone-lighter: #e4dace;
-  --color-code-bg: #1e1b16;
-  --color-code-text: #c4b8a4;
-  --color-code-number: #d08770;
-  --color-code-string: #a3be8c;
-  --color-code-fn: #c4956a;
+  --color-cream: var(--kasumi-cream);
+  --color-cream-dark: var(--kasumi-cream-dark);
+  --color-warm-black: var(--kasumi-warm-black);
+  --color-warm-brown: var(--kasumi-warm-brown);
+  --color-stone: var(--kasumi-stone);
+  --color-stone-light: var(--kasumi-stone-light);
+  --color-stone-lighter: var(--kasumi-stone-lighter);
+  --color-code-bg: var(--kasumi-code-bg);
+  --color-code-text: var(--kasumi-code-text);
+  --color-code-number: var(--kasumi-code-number);
+  --color-code-string: var(--kasumi-code-string);
+  --color-code-fn: var(--kasumi-code-fn);
+  --color-ink: var(--kasumi-ink);
 
   --font-display: 'Fraunces Variable', serif;
   --font-body: 'Inter Variable', system-ui, -apple-system, sans-serif;
@@ -20,15 +21,56 @@
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+
+    --kasumi-cream: #faf7f2;
+    --kasumi-cream-dark: #f3ede4;
+    --kasumi-warm-black: #2c2418;
+    --kasumi-warm-brown: #8b7355;
+    --kasumi-stone: #b8a990;
+    --kasumi-stone-light: #d4c9b8;
+    --kasumi-stone-lighter: #e4dace;
+    --kasumi-code-bg: #1e1b16;
+    --kasumi-code-text: #c4b8a4;
+    --kasumi-code-number: #d08770;
+    --kasumi-code-string: #a3be8c;
+    --kasumi-code-fn: #c4956a;
+    --kasumi-ink: #2c2418;
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --kasumi-cream: #100e0c;
+    --kasumi-cream-dark: #191511;
+    --kasumi-warm-black: #f0e5d7;
+    --kasumi-warm-brown: #d3bda2;
+    --kasumi-stone: #b9a185;
+    --kasumi-stone-light: #7a664f;
+    --kasumi-stone-lighter: #967d61;
+    --kasumi-code-bg: #17130f;
+    --kasumi-code-text: #d8c9b3;
+    --kasumi-code-number: #e1aa88;
+    --kasumi-code-string: #b8d6a1;
+    --kasumi-code-fn: #e4b98f;
+    --kasumi-ink: #f0e5d7;
+  }
+
   body {
+    min-height: 100vh;
     background-color: var(--color-cream);
     color: var(--color-warm-black);
     font-family: var(--font-body);
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  *:focus {
-    outline: none;
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-warm-brown);
+    outline-offset: 2px;
   }
 }

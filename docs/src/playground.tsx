@@ -240,7 +240,7 @@ export function Playground() {
                   setTexts(next)
                 }}
                 placeholder="String 1"
-                className="flex-1 px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg outline-none text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
               />
             </div>
             <AnimatePresence initial={false}>
@@ -278,7 +278,7 @@ export function Playground() {
                         setTexts(next)
                       }}
                       placeholder={`String ${i + 2}`}
-                      className="flex-1 px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg outline-none text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
+                      className="flex-1 px-4 py-2.5 text-sm bg-cream border border-stone-light rounded-lg text-warm-black font-body placeholder:text-stone focus:border-warm-brown transition-colors"
                     />
                     {texts.length > 2 && (
                       <button
@@ -329,7 +329,7 @@ export function Playground() {
                 <ToggleGroup.Item
                   key={preset}
                   value={preset}
-                  className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-warm-black data-[state=on]:text-cream data-[state=on]:border-warm-black data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
+                  className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-ink data-[state=on]:text-cream data-[state=on]:border-ink data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
                 >
                   {preset}
                 </ToggleGroup.Item>
@@ -351,13 +351,13 @@ export function Playground() {
             >
               <ToggleGroup.Item
                 value="on"
-                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-warm-black data-[state=on]:text-cream data-[state=on]:border-warm-black data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
+                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-ink data-[state=on]:text-cream data-[state=on]:border-ink data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
               >
                 on
               </ToggleGroup.Item>
               <ToggleGroup.Item
                 value="off"
-                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-warm-black data-[state=on]:text-cream data-[state=on]:border-warm-black data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
+                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-ink data-[state=on]:text-cream data-[state=on]:border-ink data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
               >
                 off
               </ToggleGroup.Item>
@@ -385,13 +385,13 @@ export function Playground() {
             >
               <ToggleGroup.Item
                 value="on"
-                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-warm-black data-[state=on]:text-cream data-[state=on]:border-warm-black data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
+                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-ink data-[state=on]:text-cream data-[state=on]:border-ink data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
               >
                 on
               </ToggleGroup.Item>
               <ToggleGroup.Item
                 value="off"
-                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-warm-black data-[state=on]:text-cream data-[state=on]:border-warm-black data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
+                className="px-4 py-1.5 text-[13px] rounded-lg border transition-colors data-[state=on]:bg-ink data-[state=on]:text-cream data-[state=on]:border-ink data-[state=on]:font-medium data-[state=off]:border-stone-light data-[state=off]:text-warm-brown data-[state=off]:bg-transparent"
               >
                 off
               </ToggleGroup.Item>
@@ -456,7 +456,7 @@ export function Playground() {
         {/* Restart */}
         <button
           onClick={handleRestart}
-          className="self-start px-7 py-2.5 bg-warm-black text-cream text-sm font-medium rounded-[10px] hover:opacity-90 transition-opacity cursor-pointer"
+          className="self-start px-7 py-2.5 bg-ink text-cream text-sm font-medium rounded-[10px] hover:opacity-90 transition-opacity cursor-pointer"
         >
           Restart
         </button>
@@ -526,7 +526,7 @@ function SliderControl({
         <Slider.Track className="relative h-1 grow rounded-full bg-stone-lighter">
           <Slider.Range className="absolute h-full rounded-full bg-warm-brown" />
         </Slider.Track>
-        <Slider.Thumb className="block w-4 h-4 rounded-full bg-warm-black shadow-sm hover:bg-warm-brown transition-colors" />
+        <Slider.Thumb className="block w-4 h-4 rounded-full bg-ink shadow-sm hover:bg-warm-brown transition-colors" />
       </Slider.Root>
     </div>
   )
