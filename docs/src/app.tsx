@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 import type { ThemedToken } from 'shiki'
 import { highlightCode } from './highlight'
 import { Playground } from './playground'
+import {
+  applyTheme,
+  persistTheme,
+  resolveInitialTheme,
+  type Theme,
+} from './theme'
 
 function CodeBlock({ code }: { code: string }) {
   const [tokens, setTokens] = useState<Array<Array<ThemedToken>> | null>(null)
@@ -33,10 +39,40 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 export function App() {
+  const [theme, setTheme] = useState<Theme>(() => resolveInitialTheme())
+
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    const nextTheme: Theme = theme === 'light' ? 'dark' : 'light'
+    setTheme(nextTheme)
+    persistTheme(nextTheme)
+  }
+
   return (
     <div className="max-w-[1200px] mx-auto px-8 md:px-[120px] pb-24">
+      <div className="flex justify-end pt-8">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-stone-light bg-cream-dark text-[13px] font-medium text-warm-brown hover:text-warm-black transition-colors cursor-pointer"
+          aria-pressed={theme === 'dark'}
+          aria-label={`Enable ${theme === 'light' ? 'dark' : 'light'} mode`}
+          title={`Enable ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          <span className="font-mono text-xs">
+            {theme === 'light' ? 'Dark mode' : 'Light mode'}
+          </span>
+          <span className="text-[14px]" aria-hidden>
+            {theme === 'light' ? '◐' : '◑'}
+          </span>
+        </button>
+      </div>
+
       {/* Hero */}
-      <div className="flex flex-col items-center pt-24 pb-16 gap-5">
+      <div className="flex flex-col items-center pt-16 pb-16 gap-5">
         <div className="flex items-baseline gap-4">
           <h1 className="font-display text-7xl font-light text-warm-black tracking-tight">
             kasumi
